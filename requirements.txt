@@ -6,5 +6,6 @@ langchain-huggingface
 huggingface_hub
 transformers
 sentence-transformers
+streamlit 
 pypdf
 faiss-cpu

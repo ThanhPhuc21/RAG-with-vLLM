@@ -8,6 +8,7 @@ from langchain_community.vectorstores import FAISS
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts.chat import ChatPromptTemplate
 from langchain.chains.retrieval import create_retrieval_chain
+
 import config as cons
 
 if not os.environ.get("AZURE_OPENAI_API_KEY"):
@@ -19,7 +20,9 @@ llm = AzureChatOpenAI(
     azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
     azure_deployment=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],
     openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
+    api_key=os.environ["AZURE_OPENAI_API_KEY"]
 )
+
 
 ## Load FAISS DB
 embeddings = HuggingFaceEmbeddings(model_name = "sentence-transformers/all-mpnet-base-v2")
@@ -47,7 +50,8 @@ chat_prompt = ChatPromptTemplate.from_messages([
 combine_chain = create_stuff_documents_chain(llm=llm, prompt=chat_prompt)
 retrieval_chain = create_retrieval_chain(retriever=retriever, combine_docs_chain=combine_chain)
 
-#----Query------
-query = "Giai đoạn phát triển  1993 - 1995 như nào?"
-result = retrieval_chain.invoke({"input": query})
-print("Answer:", result.get("answer") or result.get("context"))
+# #----Query------
+# # query = "Giai đoạn phát triển  2006 - 2010 như nào?"
+# # result = retrieval_chain.invoke({"input": query})
+# # print("Answer:", result.get("answer") or result.get("context"))
+
