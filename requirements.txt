@@ -1,9 +1,14 @@
 langchain
 langchain-community
 langchain-core
+langchain[openai]
+langgraph
+langfuse>=2.0.0
+# langfuse-langchain>=2.0.0
 langchain-huggingface
 huggingface_hub
 transformers
 sentence-transformers
+streamlit 
 pypdf
 faiss-cpu
