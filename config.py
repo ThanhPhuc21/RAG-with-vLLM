@@ -1,0 +1,3 @@
+PDF_DATA_PATH="pdf_data"
+VECTOR_DB_PATH="vectorstores"
+MILVUS_URI="http://104.199.243.127:19530"

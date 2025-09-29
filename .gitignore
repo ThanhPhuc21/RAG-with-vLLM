@@ -1,0 +1,7 @@
+#Python
+__pycache__/
+
+# Virtual env
+.env
+ven_chat/
+env_chat/
