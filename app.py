@@ -1,5 +1,6 @@
 import streamlit as st
-from chain import retrieval_chain
+# from chain import retrieval_chain
+from chain_vllm import retrieval_chain
 from langfuse.langchain import CallbackHandler
 
 handler = CallbackHandler()
@@ -23,14 +24,15 @@ if prompt := st.chat_input("Nhập câu hỏi của bạn..."):
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Gọi LLM chain
-    result = retrieval_chain.invoke({"input": prompt}, config={
-                                                                "callbacks": [handler],
-                                                                "metadata": {"user_id": "123", "session": "abc"}
-                                                            })
-    answer = result.get("answer") or result.get("context")
-
-    # Hiển thị câu trả lời
-    st.session_state.messages.append({"role": "assistant", "content": answer})
     with st.chat_message("assistant"):
-        st.markdown(answer)
+        placeholder = st.empty()
+        # Gọi LLM chain
+        # answer = retrieval_chain.invoke(prompt)
+        ai_message = ""
+        for token in retrieval_chain.stream(prompt):
+            ai_message+= token
+            placeholder.markdown(ai_message)
+        # answer = result.get("answer") or result.get("context")
+
+        # Hiển thị câu trả lời
+        st.session_state.messages.append({"role": "assistant", "content": ai_message})

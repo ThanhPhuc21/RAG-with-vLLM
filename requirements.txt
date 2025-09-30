@@ -4,7 +4,11 @@ langchain-core
 langchain[openai]
 langgraph
 langfuse>=2.0.0
+<<<<<<< HEAD
 # langfuse-langchain>=2.0.0
+=======
+langchain-milvus>=0.1.5
+>>>>>>> chain
 langchain-huggingface
 huggingface_hub
 transformers
@@ -12,3 +16,7 @@ sentence-transformers
 streamlit 
 pypdf
 faiss-cpu
+<<<<<<< HEAD
+=======
+rank_bm25
+>>>>>>> chain
