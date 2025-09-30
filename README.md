@@ -1,42 +1,42 @@
 # 🤖 Chatbot using RAG flow  
-
+[👉 README_VI](./README_vi.md)
 ## 📌 Diagram  
 ![RAG Diagram](./assets/rag-pipeline.png)  
 
 ---
 
 ## 🖥️ Prepare server  
-Bạn có thể lựa chọn môi trường chạy theo nhu cầu:  
+You can choose the runtime environment depending on your needs:  
 
-- **Option 1: RAG với vLLM**  
-  + GPU tối thiểu **16GB VRAM**  
+- **Option 1: RAG with vLLM**  
+  + Minimum GPU: **16GB VRAM**  
   + RAM: **16GB**  
-  + OS: **Ubuntu 20.04 / 22.04** (khuyến nghị để dễ cài đặt)  
+  + OS: **Ubuntu 20.04 / 22.04** (recommended for easier setup)  
 
-- **Option 2: RAG với LLM có sẵn (OpenAI, Azure, …)**  
-  + Không cần GPU  
+- **Option 2: RAG with existing LLM (OpenAI, Azure, …)**  
+  + No GPU required  
   + RAM: **16GB**  
   + OS: **Ubuntu 20.04 / 22.04**  
 
 ---
 
 ## 📂 Prepare data  
-- Dữ liệu dạng **PDF** được đặt tại folder:  ```./pdf_data/```
+- Place your **PDF files** in the folder:  ```./pdf_data/```
 
-# 🚀 Init môi trường
+# 🚀 Init environment
 
 ```bash
-# Tạo virtual env
+# Create virtual env
 python3 -m venv env_chat
 
-# Kích hoạt môi trường (Ubuntu)
+# Activate environment (Ubuntu)
 source env_chat/bin/activate
 ```
 
-# 🚀 Run chương tình
+# 🚀 Run application
 
 ```bash
-# Khởi tạo DB vector(Milvus):
+# Start vector DB (Milvus):
 sudo docker compose up -d
 
 # Chunk data:
@@ -44,4 +44,3 @@ python3 prepare_vector_db.py
 
 # Run aplication
 streamlit run app.py
->>>>>>> chain
