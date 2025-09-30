@@ -1,61 +1,42 @@
 from dotenv import load_dotenv
 load_dotenv()
 
-import sys
-import traceback
 import logging
-
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader, DirectoryLoader
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_milvus import Milvus
 import config as cons
 
-# Thiết lập logging
-# logging.basicConfig(
-#     level=logging.DEBUG,
-#     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-# )
-# logging.getLogger("pdfminer").setLevel(logging.DEBUG)
-# logging.getLogger("langchain").setLevel(logging.DEBUG)
-
-# # Ghi lại sys.excepthook để in traceback đầy đủ
-# def custom_excepthook(exc_type, exc_value, exc_traceback):
-#     if issubclass(exc_type, KeyboardInterrupt):
-#         sys.__excepthook__(exc_type, exc_value, exc_traceback)
-#         return
-#     print("=== Uncaught Exception ===")
-#     traceback.print_exception(exc_type, exc_value, exc_traceback)
-
-# sys.excepthook = custom_excepthook
-# Embedding
+#init embedding model
 embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-mpnet-base-v2"
+            model_name="intfloat/multilingual-e5-small",
+            model_kwargs={'device': cons.DEVICE},   # or "cuda" if you have a GPU
+            encode_kwargs={'normalize_embeddings': True}  # E5 models work best when normalized
         )
 
 def create_db_from_file():
+    """
+    init loader to load pdf folder
+    """
     try:
-        # init loader để load pdf folder
         pdf_path = cons.PDF_DATA_PATH
         loader = DirectoryLoader(pdf_path, glob="*.pdf", loader_cls=PyPDFLoader)
         documents = loader.load()
 
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=512,
-            chunk_overlap=100
-        )
+            chunk_overlap=100)
         chunks = text_splitter.split_documents(documents)
-
         db = Milvus.from_documents(
             chunks,
             embeddings,
             connection_args={"uri": cons.MILVUS_URI},
-            collection_name="data_vectors",  # tên collection trong Milvus
+            collection_name="data_vectors",  #  collection name in  Milvus
         )
         return db
-
     except Exception as e:
-        logging.error("Lỗi khi tạo DB từ file PDF", exc_info=True)
+        logging.error(f"Error in extract PDF {e}", exc_info=True)
         raise
 
 def connect_to_milvus(URI_link: str, collection_name: str) -> Milvus:
@@ -76,4 +57,7 @@ def connect_to_milvus(URI_link: str, collection_name: str) -> Milvus:
         collection_name=collection_name,
     )
     return vectorstore
+
+if __name__ == "__main__":
+    create_db_from_file()
 

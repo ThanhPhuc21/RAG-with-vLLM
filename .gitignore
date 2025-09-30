@@ -5,3 +5,4 @@ __pycache__/
 .env
 ven_chat/
 env_chat/
+volumes/

@@ -4,6 +4,7 @@ load_dotenv()
 import os
 from typing import Any
 from langchain_openai import ChatOpenAI
+from langchain_openai import AzureChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain.chains.combine_documents import create_stuff_documents_chain
@@ -21,14 +22,21 @@ if not os.environ.get("AZURE_OPENAI_API_KEY"):
 
 
 ## Init LLM
+# def init_llm():
+#     """
+#     Initialize llm
+#     """
+#     return ChatOpenAI(
+#         model="Qwen/Qwen1.5-4B-Chat",
+#         openai_api_key="EMPTY",
+#         openai_api_base="http://104.199.243.127:8000/v1",
+#     )
 def init_llm():
-    """
-    Initialize llm
-    """
-    return ChatOpenAI(
-        model="Qwen/Qwen1.5-4B-Chat",
-        openai_api_key="EMPTY",
-        openai_api_base="http://104.199.243.127:8000/v1",
+    return AzureChatOpenAI(
+        azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
+        azure_deployment=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],
+        openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
+        # api_key=os.environ["AZURE_OPENAI_API_KEY"]
     )
 def get_qa_prompt():
     """
