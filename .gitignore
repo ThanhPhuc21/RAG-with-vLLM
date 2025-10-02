@@ -6,3 +6,4 @@ __pycache__/
 ven_chat/
 env_chat/
 volumes/
+langfuse/

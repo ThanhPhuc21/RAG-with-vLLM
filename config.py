@@ -1,3 +1,4 @@
 PDF_DATA_PATH="pdf_data"
-MILVUS_URI="http://35.193.186.207:19530"
+MILVUS_URI="http://34.27.9.164:19530"
+API_URL = "http://34.27.9.164:8000" 
 DEVICE="cpu"

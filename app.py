@@ -1,38 +1,74 @@
-import streamlit as st
-# from chain import retrieval_chain
-from chain_vllm import retrieval_chain
-from langfuse.langchain import CallbackHandler
+from fastapi import FastAPI, Request
+from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi import FastAPI, UploadFile, File
+import uvicorn
+from chain_vllm import retrieval_chain 
+from prepare_vector_db import insert_pdf_to_milvus
+from typing import List
+import os
+import shutil
 
-handler = CallbackHandler()
-# -------- Streamlit UI ----------
-st.set_page_config(page_title="Chat với FAISS + Azure OpenAI", page_icon="🤖")
-st.title("💬 Chatbot FAISS + Azure OpenAI")
+app = FastAPI(title="Chatbot RAG API", version="1.0")
 
-# Lưu lịch sử chat
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+@app.post("/chat")
+async def chat(request: Request):
+    body = await request.json()
+    question = body.get("question", "")
 
-# Hiển thị lịch sử chat
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
+    if not question:
+        return JSONResponse({"error": "Missing question"}, status_code=400)
 
-# Input chat
-if prompt := st.chat_input("Nhập câu hỏi của bạn..."):
-    # Hiển thị câu hỏi người dùng
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
+    try:
+       
+        result = retrieval_chain.invoke(question)
+        return {"answer": result}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
 
-    with st.chat_message("assistant"):
-        placeholder = st.empty()
-        # Gọi LLM chain
-        # answer = retrieval_chain.invoke(prompt)
-        ai_message = ""
-        for token in retrieval_chain.stream(prompt):
-            ai_message+= token
-            placeholder.markdown(ai_message)
-        # answer = result.get("answer") or result.get("context")
 
-        # Hiển thị câu trả lời
-        st.session_state.messages.append({"role": "assistant", "content": ai_message})
+# API stream
+@app.post("/chat/stream")
+async def chat_stream(request: Request):
+    body = await request.json()
+    question = body.get("question", "")
+
+    if not question:
+        return JSONResponse({"error": "Missing question"}, status_code=400)
+
+    async def event_generator():
+        try:
+            full_response = ""
+            async for chunk in retrieval_chain.astream(question):
+                full_response += chunk
+                # Gửi từng chunk nhỏ
+                yield f"data: {chunk}\n\n"
+            
+            # Log  debug
+            print("FULL RESPONSE:")
+            print(repr(full_response))
+        except Exception as e:
+            yield f"data: [ERROR] {str(e)}\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+@app.post("/insert_pdfs/")
+async def insert_pdfs(files: List[UploadFile] = File(...)):
+    saved_files = []
+    try:
+        os.makedirs("pdf_data", exist_ok=True)
+        for file in files:
+            file_path = os.path.join("pdf_data", file.filename)
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            saved_files.append(file_path)
+
+        result = insert_pdf_to_milvus(saved_files, collection_name = "data_vectors")
+        return result
+    finally:
+        for path in saved_files:
+            if os.path.exists(path):
+                os.remove(path)
+
+if __name__ == "__main__":
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
