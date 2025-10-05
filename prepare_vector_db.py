@@ -24,17 +24,17 @@ embeddings = AzureOpenAIEmbeddings(
     openai_api_version=os.environ["EMBEDDING_AZURE_OPENAI_API_VERSION"],
 )
 
-# def preprocess_text_for_semantic(text: str) -> str:
-#     """Preprocess nhẹ, giữ nguyên cấu trúc ngữ nghĩa"""
-#     # Xóa ký tự điều khiển
-#     text = re.sub(r'[\x00-\x08\x0b-\x0c\x0e-\x1f\x7f-\x9f]', '', text)
-#     # Chuẩn hóa khoảng trắng
-#     text = re.sub(r'[ \t]+', ' ', text)
-#     text = re.sub(r'\n{3,}', '\n\n', text)
-#     # Fix hyphenation từ PDF
-#     text = re.sub(r'(\w)-\s+(\w)', r'\1\2', text)
+def preprocess_text_for_semantic(text: str) -> str:
+    """Preprocess nhẹ, giữ nguyên cấu trúc ngữ nghĩa"""
+    # Xóa ký tự điều khiển
+    text = re.sub(r'[\x00-\x08\x0b-\x0c\x0e-\x1f\x7f-\x9f]', '', text)
+    # Chuẩn hóa khoảng trắng
+    text = re.sub(r'[ \t]+', ' ', text)
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    # Fix hyphenation từ PDF
+    text = re.sub(r'(\w)-\s+(\w)', r'\1\2', text)
     
-    # return text.strip()
+    return text.strip()
 
 def create_db_from_file_semantic():
     """
@@ -56,25 +56,15 @@ def create_db_from_file_semantic():
         
         # Preprocess - GIỮ LẠI bước này
         for doc in documents:
-            doc.page_content = doc.page_content #preprocess_text_for_semantic(doc.page_content)
+            doc.page_content = preprocess_text_for_semantic(doc.page_content)
             doc.metadata['char_count'] = len(doc.page_content)
-            # doc.metadata['author'] = doc.metadata.get('author', 'Unknown')
         
         # Semantic Chunking - tự động tìm điểm cắt dựa trên ngữ nghĩa
-        # Text splitter tối ưu cho tiếng Việt
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1500,  # Tăng lên cho tiếng Việt
-            chunk_overlap=200,  # Overlap 13% để giữ context
-            length_function=len,
-            separators=[
-                "\n\n",  # Paragraph breaks (ưu tiên cao nhất)
-                "\n",    # Line breaks
-                ". ",    # Sentence endings
-                "。",    # Alternative sentence ending
-                " ",     # Word breaks
-                ""       # Character breaks (cuối cùng)
-            ],
-            add_start_index=True  # Thêm vị trí bắt đầu chunk
+        text_splitter = SemanticChunker(
+            embeddings=embeddings,
+            breakpoint_threshold_type="percentile",  # "percentile", "standard_deviation", "interquartile"
+            breakpoint_threshold_amount=90,  # Càng cao càng ít chunks
+            number_of_chunks=None,  # Để None cho tự động
         )
         
         chunks = text_splitter.split_documents(documents)
@@ -91,7 +81,7 @@ def create_db_from_file_semantic():
             chunks,
             embeddings,
             connection_args={"uri": cons.MILVUS_URI},
-            collection_name="data_vectors",
+            collection_name="data_vectors_semantic",
             index_params={
                 "metric_type": "COSINE",
                 "index_type": "HNSW",
@@ -105,7 +95,6 @@ def create_db_from_file_semantic():
     except Exception as e:
         logging.error(f"Error in create_db_from_file_semantic: {e}", exc_info=True)
         raise
-
 
 def connect_to_milvus(URI_link: str, collection_name: str) -> Milvus:
     """

@@ -37,10 +37,11 @@ source env_chat/bin/activate
 
 ```bash
 # Khởi tạo DB vector(Milvus):
+cd vectorstrores
 sudo docker compose up -d
 
 # Chunk data:
 python3 prepare_vector_db.py
 
 # Run aplication
-streamlit run app.py
+sudo docker compose up -d

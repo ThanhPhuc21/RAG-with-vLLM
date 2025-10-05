@@ -4,7 +4,7 @@ import config as cons
 import time
 import re
 
-st.set_page_config(page_title="Chat & Upload Demo", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="Chat Demo", page_icon="", layout="wide")
 
 def format_markdown(text):
     """
@@ -52,6 +52,10 @@ def format_markdown(text):
                 in_subitem = False
     
     text = '\n'.join(formatted_lines)
+
+    # CASE 4: Đảm bảo heading in đậm và list (- hoặc số) có line break rõ ràng
+    # Ví dụ: "**Các trường hợp:**\n\n- ..." thay vì "**Các trường hợp:**- ..."
+    text = re.sub(r'(\*\*.*?\*\*):\s*\n?(-|\d+\.)', r'\1:\n\n\2', text)
     
     # Đảm bảo có space sau bullet points
     text = re.sub(r'•([^\s])', r'• \1', text)
@@ -125,7 +129,7 @@ with col1:
                 else:
                     st.error(f"Lỗi insert: {response.text}")
             except Exception as e:
-                st.error(f"⚠️ Error: {str(e)}")
+                st.error(f"Error: {str(e)}")
         else:
             st.warning("Vui lòng chọn ít nhất 1 file PDF")
 
@@ -177,7 +181,7 @@ with col2:
                     ai_message = stream_markdown(response, placeholder)
 
                 except Exception as e:
-                    ai_message = f"⚠️ Error: {str(e)}"
+                    ai_message = f"Error: {str(e)}"
                     placeholder.markdown(ai_message)
 
                 # Lưu response vào lịch sử

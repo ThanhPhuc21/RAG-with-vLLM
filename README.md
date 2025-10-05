@@ -15,7 +15,7 @@ You can choose the runtime environment depending on your needs:
 
 - **Option 2: RAG with existing LLM (OpenAI, Azure, …)**  
   + No GPU required  
-  + RAM: **16GB**  
+  + RAM: **8GB**  
   + OS: **Ubuntu 20.04 / 22.04**  
 
 ---
@@ -37,10 +37,11 @@ source env_chat/bin/activate
 
 ```bash
 # Start vector DB (Milvus):
+cd vectorstores
 sudo docker compose up -d
 
 # Chunk data:
 python3 prepare_vector_db.py
 
 # Run aplication
-streamlit run app.py
+sudo docker compose up -d

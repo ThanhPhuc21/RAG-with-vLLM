@@ -44,8 +44,8 @@ async def chat_stream(request: Request):
                 yield f"data: {chunk}\n\n"
             
             # Log  debug
-            print("FULL RESPONSE:")
-            print(repr(full_response))
+            #print("FULL RESPONSE:")
+            #print(repr(full_response))
         except Exception as e:
             yield f"data: [ERROR] {str(e)}\n\n"
 

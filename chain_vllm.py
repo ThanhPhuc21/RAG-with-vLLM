@@ -65,6 +65,7 @@ def get_qa_prompt():
             - Cite the source or excerpt from the retrieved context when applicable and put it in ()
             - Format your answer in Markdown with line breaks after each bullet point
             - Answer using  Vietnamese
+            - If human chat "hi, hello, Xin chao, ... then say hi and introduce yourself as assistant 
             """),
         ("human", "Question: {question}\nContext: {context}\nAnswer:")
     ])
@@ -117,15 +118,16 @@ def init_hybrid_retriever(
     bm25_weight: float = 0.4
 ):
     """
-    Khởi tạo Hybrid Retriever với Vector Search + BM25 + Reranking
+    Init  Hybrid Retriever with  Vector Search + BM25 + Reranking
     """
     try:
-        vectorstore = connect_to_milvus(cons.MILVUS_URI, "data_vectors")
+        vectorstore = connect_to_milvus(cons.MILVUS_URI, "data_vectors_semantic")
         
         vector_retriever = vectorstore.as_retriever(
             search_type="similarity",
             search_kwargs={
-                "k": top_k,
+                "k": top_k * 3,  
+                "score_threshold": 0.3
             }
         )
         
@@ -139,11 +141,6 @@ def init_hybrid_retriever(
             expr=""   # Không filter
         )
         
-        # Cách 2: Nếu collection lớn - dùng scroll (tốt hơn)
-        # all_docs = []
-        # for doc_batch in vectorstore.scroll():  # Nếu Milvus support scroll
-        #     all_docs.extend(doc_batch)
-        
         logging.info(f"Loaded {len(all_docs)} documents for BM25")
         
         if len(all_docs) == 0:
@@ -151,7 +148,7 @@ def init_hybrid_retriever(
         
         bm25_retriever = BM25Retriever.from_documents(
             all_docs,
-            k=top_k  # Cũng lấy nhiều để rerank
+            k=top_k *3
         )
         
         # 3. Ensemble Retriever (kết hợp)
@@ -189,14 +186,13 @@ def init_hybrid_retriever(
         raise
 
 
-# Sử dụng
 hybrid_retriever = init_hybrid_retriever(
     top_k=4,
     vector_weight=0.6,
     bm25_weight=0.4
 )
 
-   # Initialize llm and prompt
+# Initialize llm and prompt
 llm = init_llm()
 prompt = get_qa_prompt()
 
