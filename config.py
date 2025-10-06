@@ -1,4 +1,5 @@
 PDF_DATA_PATH="pdf_data"
-MILVUS_URI="http://136.113.75.32:19530"
-API_URL = "http://136.113.75.32:8000" 
+MILVUS_URI="http://34.123.173.53:19530"
+COLECTION = "data_vectors_docling"
+API_URL = "http://34.123.173.53:8000" 
 DEVICE="cpu"

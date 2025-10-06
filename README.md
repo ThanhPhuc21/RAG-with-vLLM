@@ -45,3 +45,12 @@ python3 prepare_vector_db.py
 
 # Run aplication
 sudo docker compose up -d
+```
+### UI Test. You can open : ```http://<your IP>:8501/```  
+![UI](./assets/UI.png)
+
+### If you wanna view data in DBvector. You can open : ```http://<your IP>:8001/```  
+![RAG Diagram](./assets/milvus.png)  
+
+### If you wanna trace process LLM model.You using Langfuse 
+![RAG Diagram](./assets/langfuse.png)  

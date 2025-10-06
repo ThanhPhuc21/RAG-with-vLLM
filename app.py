@@ -2,13 +2,15 @@ from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi import FastAPI, UploadFile, File
 import uvicorn
-from chain_vllm import retrieval_chain 
-from prepare_vector_db import insert_pdf_to_milvus
+from llm.rag_service import RAG_Service
+from untils.prepare_vector_db import insert_pdf_to_milvus
 from typing import List
 import os
 import shutil
 
 app = FastAPI(title="Chatbot RAG API", version="1.0")
+rag_service = RAG_Service()
+retrieval_chain = rag_service.init_retrieval_chain()
 
 @app.post("/chat")
 async def chat(request: Request):
@@ -19,7 +21,6 @@ async def chat(request: Request):
         return JSONResponse({"error": "Missing question"}, status_code=400)
 
     try:
-       
         result = retrieval_chain.invoke(question)
         return {"answer": result}
     except Exception as e:
@@ -40,15 +41,9 @@ async def chat_stream(request: Request):
             full_response = ""
             async for chunk in retrieval_chain.astream(question):
                 full_response += chunk
-                # Gửi từng chunk nhỏ
                 yield f"data: {chunk}\n\n"
-            
-            # Log  debug
-            #print("FULL RESPONSE:")
-            #print(repr(full_response))
         except Exception as e:
             yield f"data: [ERROR] {str(e)}\n\n"
-
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
@@ -62,8 +57,7 @@ async def insert_pdfs(files: List[UploadFile] = File(...)):
             with open(file_path, "wb") as buffer:
                 shutil.copyfileobj(file.file, buffer)
             saved_files.append(file_path)
-
-        result = insert_pdf_to_milvus(saved_files, collection_name = "data_vectors")
+        result = insert_pdf_to_milvus(saved_files, "data_vectors", rag_service.embeddings)
         return result
     finally:
         for path in saved_files:
